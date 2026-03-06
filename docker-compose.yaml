@@ -1,0 +1,26 @@
+services:
+  app:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:password@db/paytm_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=paytm_db
+    # Tuning Postgres for high write throughput
+    command:  postgres -c shared_buffers=256MB -c max_connections=1000 -c synchronous_commit=off
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
